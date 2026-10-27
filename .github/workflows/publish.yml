@@ -1,4 +1,4 @@
-name: Publish to Azure DevOps Marketplace
+name: 🚀 Publish to Azure DevOps Marketplace
 
 on:
   release:
@@ -13,23 +13,24 @@ jobs:
       id-token: write
       contents: read
     steps:
-    - uses: actions/checkout@v7
+    - name: 📥 Checkout
+      uses: actions/checkout@v7
     
-    - name: Setup pnpm
+    - name: 📦 Setup pnpm
       uses: pnpm/action-setup@v6
     
-    - name: Setup Node.js
+    - name: 🟢 Setup Node.js
       uses: actions/setup-node@v7
       with:
         node-version: '24'
         cache-dependency-path: './pnpm-lock.yaml'
         cache: 'pnpm'
     
-    - name: Install dependencies
+    - name: 📚 Install dependencies
       run: |
         pnpm install --frozen-lockfile
 
-    - name: Set extension version
+    - name: 🏷️ Set extension version
       run: |
         # Extract version from tag (supports both v1.0.0 and 1.0.0)
         VERSION=${GITHUB_REF_NAME#v}
@@ -46,24 +47,24 @@ jobs:
           mv task.tmp.json "$TASK_JSON"
         done
 
-    - name: Test
+    - name: 🧪 Test
       run: pnpm test
 
-    - name: Build extension
+    - name: 🛠️ Build extension
       run: pnpm build:complete
 
-    - name: Create extension package
+    - name: 🎁 Create extension package
       run: |
         pnpm exec tfx extension create --manifest-globs vss-extension.json --output-path dist --publisher ${{ secrets.AZURE_PUBLISHER_ID }}
         
-    - name: Azure login (workload identity federation)
+    - name: 🔐 Azure login (workload identity federation)
       uses: azure/login@v2
       with:
         client-id: ${{ vars.AZURE_CLIENT_ID }}
         tenant-id: ${{ vars.AZURE_TENANT_ID }}
         allow-no-subscriptions: true
 
-    - name: Publish to Marketplace
+    - name: 🚀 Publish to Marketplace
       run: |
         # Entra token for Azure DevOps / Marketplace (resource 499b84ac-1321-427f-aa17-267ca6975798)
         TOKEN=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)
@@ -72,13 +73,13 @@ jobs:
         EXTENSION_FILE=$(ls -1 dist/*.vsix | head -1)
         pnpm exec tfx extension publish --vsix "$EXTENSION_FILE" --auth-type pat --token "$TOKEN" --publisher ${{ secrets.AZURE_PUBLISHER_ID }} --no-wait-validation
 
-    - name: Upload extension package
+    - name: 📤 Upload extension package
       uses: actions/upload-artifact@v7
       with:
         name: extension-package
         path: dist/*.vsix
 
-    - name: Upload dist
+    - name: 📤 Upload dist
       uses: actions/upload-artifact@v7
       with:
         name: complete-distribution
