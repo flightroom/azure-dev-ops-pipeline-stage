@@ -1,0 +1,76 @@
+name: Publish to Azure DevOps Marketplace
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  publish-extension:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v6
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: '24'
+        cache-dependency-path: './pnpm-lock.yaml'
+        cache: 'pnpm'
+    
+    - name: Install dependencies
+      run: |
+        pnpm install --frozen-lockfile
+
+    - name: Set extension version
+      run: |
+        # Extract version from tag (supports both v1.0.0 and 1.0.0)
+        VERSION=${GITHUB_REF_NAME#v}
+        echo "version: $VERSION"
+
+        # Update vss-extension.json
+        jq ".version = \"$VERSION\"" vss-extension.json > vss-extension.tmp.json
+        mv vss-extension.tmp.json vss-extension.json
+
+        # Update every task.json with Major.Minor.Patch format
+        IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+        for TASK_JSON in tasks/*/task.json; do
+          jq ".version.Major = ($MAJOR | tonumber) | .version.Minor = ($MINOR | tonumber) | .version.Patch = ($PATCH | tonumber)" "$TASK_JSON" > task.tmp.json
+          mv task.tmp.json "$TASK_JSON"
+        done
+
+    - name: Test
+      run: pnpm test
+
+    - name: Build extension
+      run: pnpm build:complete
+
+    - name: Create extension package
+      run: |
+        pnpm exec tfx extension create --manifest-globs vss-extension.json --output-path dist --publisher ${{ secrets.AZURE_PUBLISHER_ID }}
+        
+    - name: Publish to Marketplace
+      run: |
+        VERSION=${GITHUB_REF_NAME#v}
+        echo "version: $VERSION"
+        # Get the extension file
+        EXTENSION_FILE=$(ls -1 dist/*.vsix | head -1)
+        
+        # Publish the extension
+        pnpm exec tfx extension publish --vsix $EXTENSION_FILE --token ${{ secrets.AZURE_MARKETPLACE_PAT }} --publisher ${{ secrets.AZURE_PUBLISHER_ID }} --no-wait-validation
+        
+        # Optional: Update the extension if it already exists
+        # pnpm exec tfx extension update --vsix $EXTENSION_FILE --token ${{ secrets.AZURE_MARKETPLACE_PAT }} --publisher ${{ secrets.AZURE_PUBLISHER_ID }} --no-wait-validation
+    - name: Upload extension package
+      uses: actions/upload-artifact@v7
+      with:
+        name: extension-package
+        path: dist/*.vsix
+
+    - name: Upload dist
+      uses: actions/upload-artifact@v7
+      with:
+        name: complete-distribution
+        path: dist/*

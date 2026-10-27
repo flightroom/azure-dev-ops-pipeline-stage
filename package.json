@@ -1,0 +1,34 @@
+{
+  "name": "microfrontend-upload",
+  "version": "1.0.0",
+  "description": "Azure DevOps tasks for uploading frontend bundles and registering Docker images in Flightroom",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:complete": "tsc && node scripts/build.mjs",
+    "typecheck": "tsc",
+    "test": "esbuild tests/flightroomApi.test.ts --bundle --platform=node --target=node20 --external:node:test --external:node:assert/strict --outfile=dist/tests/flightroomApi.test.cjs && node --test dist/tests/flightroomApi.test.cjs"
+  },
+  "keywords": [
+    "azure",
+    "devops",
+    "flightroom",
+    "microfrontend",
+    "docker"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "archiver": "^8.0.0",
+    "azure-pipelines-task-lib": "^5.281.2",
+    "form-data": "^4.0.6",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/archiver": "^8.0.0",
+    "@types/node": "^26.6.5",
+    "esbuild": "^0.28.2",
+    "tfx-cli": "^0.24.2",
+    "typescript": "^7.0.2"
+  },
+  "packageManager": "pnpm@12.15.0"
+}
