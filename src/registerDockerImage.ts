@@ -1,6 +1,6 @@
 import * as tl from "azure-pipelines-task-lib/task"
 import fetch from "node-fetch"
-import { flightroomApiUrl } from "./flightroomApi.js"
+import { describeFailure, flightroomApiUrl } from "./flightroomApi.js"
 
 export async function run(): Promise<void> {
     try {
@@ -17,7 +17,11 @@ export async function run(): Promise<void> {
         const commitSha = tl.getInput("commitSha")
         const collection = resourceType === "frontend" ? "frontends" : "backends"
         const endpoint = `${collection}/by-slug/${encodeURIComponent(slug)}/versions/${encodeURIComponent(version)}`
-        const response = await fetch(flightroomApiUrl(domain, endpoint), {
+        const url = flightroomApiUrl(domain, endpoint)
+        const pinnedImage = digest ? `${image}@${digest}` : image
+        console.log(`📝 Registering ${resourceType} "${slug}" version "${version}" with image ${pinnedImage}`)
+        console.log(`➡️ POST ${url}`)
+        const response = await fetch(url, {
             method: "POST",
             headers: { "api-key": apiKey, "content-type": "application/json", Accept: "application/json" },
             body: JSON.stringify({
@@ -28,8 +32,7 @@ export async function run(): Promise<void> {
         })
 
         if (!response.ok) {
-            const details = await response.text()
-            throw new Error(`Image registration failed: ${response.status} ${response.statusText}${details ? ` - ${details}` : ""}`)
+            throw new Error(describeFailure("Image registration", "POST", url, response.status, response.statusText, await response.text()))
         }
 
         tl.setResult(tl.TaskResult.Succeeded, `✅ Docker image registered for ${resourceType} "${slug}"`)

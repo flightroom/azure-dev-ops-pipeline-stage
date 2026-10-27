@@ -6,7 +6,7 @@ import { ZipArchive } from "archiver"
 import * as tl from "azure-pipelines-task-lib/task"
 import FormData from "form-data"
 import fetch from "node-fetch"
-import { flightroomApiUrl } from "./flightroomApi.js"
+import { describeFailure, flightroomApiUrl } from "./flightroomApi.js"
 
 const createZip = async (sourcePath: string, zipPath: string): Promise<void> => {
     const sourceStats = await stat(sourcePath)
@@ -49,15 +49,17 @@ export async function run(): Promise<void> {
             const form = new FormData()
             form.append("file", createReadStream(zipPath))
             const endpoint = `frontends/by-slug/${encodeURIComponent(microfrontendSlug)}/upload/${encodeURIComponent(version)}`
-            const response = await fetch(flightroomApiUrl(domain, endpoint), {
+            const url = flightroomApiUrl(domain, endpoint)
+            console.log(`📦 Uploading ${filePath} as frontend "${microfrontendSlug}" version "${version}" (${(await stat(zipPath)).size} bytes zipped)`)
+            console.log(`➡️ POST ${url}`)
+            const response = await fetch(url, {
                 method: "POST",
                 headers: { ...form.getHeaders(), "api-key": apiKey, Accept: "application/json" },
                 body: form
             })
 
             if (!response.ok) {
-                const details = await response.text()
-                throw new Error(`Upload failed: ${response.status} ${response.statusText}${details ? ` - ${details}` : ""}`)
+                throw new Error(describeFailure("Upload", "POST", url, response.status, response.statusText, await response.text()))
             }
         } finally {
             await rm(tempDirectory, { recursive: true, force: true })
