@@ -63,9 +63,9 @@ export async function run(): Promise<void> {
             await rm(tempDirectory, { recursive: true, force: true })
         }
 
-        tl.setResult(tl.TaskResult.Succeeded, "Frontend bundle uploaded successfully")
+        tl.setResult(tl.TaskResult.Succeeded, "✅ Frontend bundle uploaded successfully")
     } catch (error) {
-        tl.setResult(tl.TaskResult.Failed, error instanceof Error ? error.message : String(error))
+        tl.setResult(tl.TaskResult.Failed, `❌ ${error instanceof Error ? error.message : String(error)}`)
     }
 }
 
