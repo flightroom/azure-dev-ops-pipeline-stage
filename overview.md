@@ -11,7 +11,7 @@ The API key is sent in the `api-key` request header and must be a Flightroom MAN
   inputs:
     apiKey: $(FLIGHTROOM_API_KEY)
     microfrontendSlug: checkout
-    domain: https://flightroom.tnbproject.it
+    domain: https://console.flightroom.dev
     filePath: $(Build.ArtifactStagingDirectory)/app
     version: $(Build.SourceBranchName)
 ```
@@ -24,7 +24,7 @@ Place this task after the Docker build-and-push step. `image` must be the full r
 - task: flightroom-register-docker-image@1
   inputs:
     apiKey: $(FLIGHTROOM_API_KEY)
-    domain: https://flightroom.tnbproject.it
+    domain: https://console.flightroom.dev
     resourceType: backend
     slug: orders-api
     version: $(Build.SourceBranchName)

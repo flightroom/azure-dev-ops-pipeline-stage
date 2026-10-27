@@ -5,8 +5,8 @@ import { flightroomApiUrl } from "../src/flightroomApi.js"
 describe("flightroomApiUrl", () => {
     it("adds the API path and normalizes an existing /api suffix", () => {
         assert.equal(
-            flightroomApiUrl("https://flightroom.tnbproject.it/api/", "backends/by-slug/orders-api/versions/1.2.0"),
-            "https://flightroom.tnbproject.it/api/backends/by-slug/orders-api/versions/1.2.0"
+            flightroomApiUrl("https://console.flightroom.dev/api/", "backends/by-slug/orders-api/versions/1.2.0"),
+            "https://console.flightroom.dev/api/backends/by-slug/orders-api/versions/1.2.0"
         )
     })
 
