@@ -30,7 +30,7 @@
             "name": "domain",
             "type": "string",
             "label": "Flightroom URL",
-            "defaultValue": "https://flightroom.tnbproject.it",
+            "defaultValue": "https://console.flightroom.dev",
             "required": true,
             "helpMarkDown": "Flightroom base URL, without /api"
         },
