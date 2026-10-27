@@ -9,11 +9,16 @@ export const flightroomApiUrl = (domain: string, endpoint: string): string => {
     return new URL(`${basePath}/api/${route}`, base.origin).toString()
 }
 
-// The Flightroom API always answers errors as { error: { code, message } }: any other body comes from something in front of it
+// The Flightroom API answers errors as { error: { code, message } }, or with Fastify's default { statusCode, code, error, message }
+// for the errors it does not map itself (ENTITY_NOT_FOUND among them): any other body comes from something in front of it
 const flightroomError = (body: string): { code?: string; message?: string } | undefined => {
     try {
-        const error = (JSON.parse(body) as { error?: unknown }).error
-        return error && typeof error === "object" ? (error as { code?: string; message?: string }) : undefined
+        const parsed = JSON.parse(body) as { error?: unknown; statusCode?: unknown; code?: unknown; message?: unknown }
+        if (parsed.error && typeof parsed.error === "object") return parsed.error as { code?: string; message?: string }
+        if (typeof parsed.statusCode === "number" && typeof parsed.message === "string") {
+            return { code: typeof parsed.code === "string" ? parsed.code : undefined, message: parsed.message }
+        }
+        return undefined
     } catch {
         return undefined
     }

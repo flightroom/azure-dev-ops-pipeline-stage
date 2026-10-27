@@ -35,4 +35,12 @@ describe("describeFailure", () => {
         assert.match(message, /\(BACKEND_VERSION_FORBIDDEN: Registering a version requires an API key with the MANAGER role\)/)
         assert.match(message, /MANAGER deploy key/)
     })
+
+    it("recognizes Fastify's default error body as a Flightroom answer", () => {
+        const body = JSON.stringify({ statusCode: 404, code: "ENTITY_NOT_FOUND", error: "Not Found", message: "Entity not found with id orders-api" })
+        const message = describeFailure("Image registration", "POST", url, 404, "Not Found", body)
+        assert.match(message, /\(ENTITY_NOT_FOUND: Entity not found with id orders-api\)/)
+        assert.match(message, /check the slug, the resource type/)
+        assert.doesNotMatch(message, /did not come from the Flightroom API/)
+    })
 })
