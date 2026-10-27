@@ -32,9 +32,9 @@ export async function run(): Promise<void> {
             throw new Error(`Image registration failed: ${response.status} ${response.statusText}${details ? ` - ${details}` : ""}`)
         }
 
-        tl.setResult(tl.TaskResult.Succeeded, `Docker image registered for ${resourceType} "${slug}"`)
+        tl.setResult(tl.TaskResult.Succeeded, `✅ Docker image registered for ${resourceType} "${slug}"`)
     } catch (error) {
-        tl.setResult(tl.TaskResult.Failed, error instanceof Error ? error.message : String(error))
+        tl.setResult(tl.TaskResult.Failed, `❌ ${error instanceof Error ? error.message : String(error)}`)
     }
 }
 
