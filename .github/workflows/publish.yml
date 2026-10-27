@@ -7,6 +7,11 @@ on:
 jobs:
   publish-extension:
     runs-on: ubuntu-latest
+    # The Entra federated credential trusts this environment (subject repo:flightroom/azure-dev-ops-pipeline-stage:environment:marketplace)
+    environment: marketplace
+    permissions:
+      id-token: write
+      contents: read
     steps:
     - uses: actions/checkout@v7
     
@@ -51,18 +56,22 @@ jobs:
       run: |
         pnpm exec tfx extension create --manifest-globs vss-extension.json --output-path dist --publisher ${{ secrets.AZURE_PUBLISHER_ID }}
         
+    - name: Azure login (workload identity federation)
+      uses: azure/login@v2
+      with:
+        client-id: ${{ vars.AZURE_CLIENT_ID }}
+        tenant-id: ${{ vars.AZURE_TENANT_ID }}
+        allow-no-subscriptions: true
+
     - name: Publish to Marketplace
       run: |
-        VERSION=${GITHUB_REF_NAME#v}
-        echo "version: $VERSION"
-        # Get the extension file
+        # Entra token for Azure DevOps / Marketplace (resource 499b84ac-1321-427f-aa17-267ca6975798)
+        TOKEN=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken --output tsv)
+        echo "::add-mask::$TOKEN"
+
         EXTENSION_FILE=$(ls -1 dist/*.vsix | head -1)
-        
-        # Publish the extension
-        pnpm exec tfx extension publish --vsix $EXTENSION_FILE --token ${{ secrets.AZURE_MARKETPLACE_PAT }} --publisher ${{ secrets.AZURE_PUBLISHER_ID }} --no-wait-validation
-        
-        # Optional: Update the extension if it already exists
-        # pnpm exec tfx extension update --vsix $EXTENSION_FILE --token ${{ secrets.AZURE_MARKETPLACE_PAT }} --publisher ${{ secrets.AZURE_PUBLISHER_ID }} --no-wait-validation
+        pnpm exec tfx extension publish --vsix "$EXTENSION_FILE" --auth-type pat --token "$TOKEN" --publisher ${{ secrets.AZURE_PUBLISHER_ID }} --no-wait-validation
+
     - name: Upload extension package
       uses: actions/upload-artifact@v7
       with:
