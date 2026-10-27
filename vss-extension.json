@@ -1,6 +1,6 @@
 {
   "manifestVersion": 1,
-  "id": "flightroom-upload-extension",
+  "id": "flightroom-azure-devops-tasks",
   "version": "0.0.0",
   "name": "Flightroom Azure DevOps Tasks",
   "description": "Azure DevOps tasks for uploading frontend bundles and registering Docker images in Flightroom",
