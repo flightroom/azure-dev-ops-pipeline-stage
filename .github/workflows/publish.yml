@@ -7,7 +7,7 @@ on:
 jobs:
   publish-extension:
     runs-on: ubuntu-latest
-    # The Entra federated credential trusts this environment (subject repo:flightroom/azure-dev-ops-pipeline-stage:environment:marketplace)
+    # The Entra federated credential trusts this environment (subject repo:flightroom@346019903/azure-dev-ops-pipeline-stage@1435411130:environment:marketplace)
     environment: marketplace
     permissions:
       id-token: write
